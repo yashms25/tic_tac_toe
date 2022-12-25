@@ -1,0 +1,22 @@
+.gamepage-section h1 {
+  margin-left: 1rem;
+}
+
+.gamepage-section .main-headinng {
+  font-size: 3rem;
+  font-style: italic;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.game-card {
+  padding: 1rem;
+  margin: 1rem 1rem;
+  box-shadow: 10px 10px 18px rgba(0, 0, 0, 0.1);
+  border: 1px solid lightgrey;
+  border-radius: 10px;
+}
+
+.game-card-inner h2 {
+  margin-bottom: 0.5rem;
+}

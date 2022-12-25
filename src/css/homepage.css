@@ -1,0 +1,22 @@
+.async {
+  font-size: 2rem;
+  font-style: italic;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.home-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.main-heading {
+  font-size: 3rem;
+  font-weight: bold;
+  font-style: italic;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}

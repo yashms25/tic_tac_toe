@@ -1,0 +1,26 @@
+.game-section {
+  margin-top: 2rem;
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
+.name-section {
+  height: 3rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.table-section {
+  width: 100%;
+  border-collapse: collapse;
+}
+.table-section tr {
+  text-align: center;
+}
+
+.table-section td {
+  height: 120px;
+  width: calc(100% / 3);
+  cursor: pointer;
+}
