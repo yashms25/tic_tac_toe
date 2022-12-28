@@ -12,6 +12,7 @@ import {
   where,
 } from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { async } from "@firebase/util";
 
 function Gamepage() {
   const navigate = useNavigate();
@@ -50,7 +51,7 @@ function Gamepage() {
     });
   }, []);
   return (
-    <div className="gamepage-section">
+    <div className="gamepage-section" style={{ position: "relative" }}>
       <div
         style={{
           display: "flex",
@@ -69,6 +70,26 @@ function Gamepage() {
             navigate("/", { replace: true });
           }}
         />
+      </div>
+      <div
+        style={{
+          position: "fixed",
+          right: "1rem",
+          bottom: "2rem",
+          backgroundColor: colors.purple,
+          width: "3rem",
+          height: "3rem",
+          borderRadius: "10px",
+          display: "flex",
+          cursor: "pointer",
+        }}
+        onClick={async () => {
+          navigate("/newgame", {
+            state: { username: await getusername(getAuth().currentUser.email) },
+          });
+        }}
+      >
+        <p style={{ color: "white", margin: "auto" }}>+</p>
       </div>
       {games.length !== 0 ? (
         <div>
@@ -117,7 +138,7 @@ function Gamepage() {
                     }}
                     color={colors.yellow}
                     title={
-                      data.currentTurn === username && data.status == ""
+                      data.currentTurn === username && data.status === ""
                         ? "Play"
                         : "Visit game"
                     }

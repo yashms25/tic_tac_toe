@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import "../css/homepage.css";
 import UsableButton from "../components/UsableButton";
 import colors from "../config/colors";

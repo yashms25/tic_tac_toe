@@ -11,14 +11,13 @@ function UsableButton({
     <>
       <div style={style} onClick={disabled ? undefined : onPress}>
         <div
-          className="button-container"
+          className="button-con"
           style={{
             backgroundColor: color,
-            userSelect: disabled ? "none" : "all",
             cursor: disabled ? "not-allowed" : "pointer",
           }}
         >
-          <p className="button-text" color="white">
+          <p className="button-title" color="white">
             {title}
           </p>
         </div>

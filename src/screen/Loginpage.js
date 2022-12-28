@@ -1,9 +1,7 @@
 import React, { useState } from "react";
 import CommonInput from "../components/CommonInput";
-import Error from "../components/Error";
 import UsableButton from "../components/UsableButton";
 import colors from "../config/colors";
-import ErrorMessage from "../components/ErrorMessage";
 import "../css/registerpage.css";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import {
@@ -14,106 +12,154 @@ import {
   getDocs,
 } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
+import { Formik } from "formik";
+import * as Yup from "yup";
+import { password, username } from "../config/ValidationSchema";
+
 import BackIcon from "../components/BackIcon";
 
 function Loginpage() {
-  const [userName, setUserName] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState(false);
-  const [usernameError, setUserNameError] = useState(false);
-  const [passwordError, setPasswordError] = useState(false);
+  const [error, setError] = useState("");
+
   const navigate = useNavigate();
-  const onPress = async () => {
-    if (userName === "") {
-      setUserNameError(true);
-    }
-
-    if (password === "") {
-      setPasswordError(true);
-    }
-
-    if (!usernameError && !passwordError) {
-      try {
-        const q = query(
-          collection(getFirestore(), "users"),
-          where("username", "==", userName)
-        );
-        const querySnapshot = await getDocs(q);
-        if (querySnapshot.size === 0) {
-          setError(true);
-          setUserName("");
-          setPassword("");
-        } else {
-          try {
-            querySnapshot.forEach(async (doc) => {
-              await signInWithEmailAndPassword(
-                getAuth(),
-                doc.data().email,
-                password
-              ).then(() => {
-                console.log("signin done");
-                navigate("/gamepage", { replace: true });
-              });
-            });
-          } catch {
-            setError(true);
-            setUserName("");
-            setPassword("");
-          }
-        }
-      } catch {
-        setError(true);
-        setUserName("");
-        setPassword("");
-      }
+  const validation = Yup.object().shape({
+    password: password,
+    username: username,
+  });
+  const onPress = async (values) => {
+    const q = query(
+      collection(getFirestore(), "users"),
+      where("username", "==", values.username)
+    );
+    const querySnapshot = await getDocs(q);
+    if (querySnapshot.size === 0) {
+      setError("error");
+    } else {
+      querySnapshot.forEach(async (doc) => {
+        await signInWithEmailAndPassword(
+          getAuth(),
+          doc.data().email,
+          values.password
+        )
+          .then(() => {
+            console.log("signin done");
+            setError("success");
+            setTimeout(() => {
+              navigate("/gamepage", { replace: true });
+            }, 1000);
+          })
+          .catch(() => {
+            setError("error");
+          });
+      });
     }
   };
   return (
     <div className="register-section">
+      {error === "error" && (
+        <div
+          className="alert alert-danger alert-dismissible fade show"
+          role="alert"
+        >
+          <strong>Error!</strong> Invalid credentials!
+          <button
+            type="button"
+            className="btn-close"
+            data-bs-dismiss="alert"
+            aria-label="Close"
+            onClick={() => {
+              setError("");
+            }}
+          ></button>
+        </div>
+      )}
+      {error === "success" && (
+        <div
+          className="alert alert-success alert-dismissible fade show"
+          role="alert"
+        >
+          <strong>Success! </strong>Login successfull!
+          <button
+            type="button"
+            className="btn-close"
+            data-bs-dismiss="alert"
+            aria-label="Close"
+            onClick={() => {
+              setError("");
+            }}
+          ></button>
+        </div>
+      )}
       <BackIcon />
       <h4>Login</h4>
       <h1>Please enter your details</h1>
-      <div className="input-section">
-        <p>Username</p>
-        <CommonInput
-          type={"username"}
-          value={userName}
-          onChange={(e) => {
-            setUserName(e.target.value);
-            if (e.target.value) {
-              setUserNameError(false);
-            } else {
-              setUserNameError(true);
-            }
-          }}
-          placeholder={"Type your username here"}
-        />
-        {usernameError && (
-          <ErrorMessage
-            title={"Please enter your username"}
-            color={colors.red}
-          />
+      <Formik
+        initialValues={{ username: "", password: "" }}
+        validationSchema={validation}
+        onSubmit={(values) => {
+          onPress(values);
+        }}
+      >
+        {({ errors, touched, handleChange, handleSubmit, values }) => (
+          <>
+            <div className="input-section">
+              <p>Username</p>
+              <CommonInput
+                styles={{
+                  border:
+                    errors.username && touched.username
+                      ? `1px solid ${colors.red}`
+                      : `1px solid ${colors.green}`,
+                }}
+                type={"username"}
+                value={values.username}
+                onChange={handleChange("username")}
+                placeholder={"Type your username here"}
+              />
+              {errors.username && touched.username && (
+                <p
+                  style={{
+                    fontSize: 14,
+                    marginBottom: "10px",
+                    color: colors.red,
+                  }}
+                >
+                  {errors.username}
+                </p>
+              )}
+              <p>Password</p>
+              <CommonInput
+                styles={{
+                  border:
+                    errors.password && touched.password
+                      ? `1px solid ${colors.red}`
+                      : `1px solid ${colors.green}`,
+                }}
+                type={"password"}
+                value={values.password}
+                onChange={handleChange("password")}
+                placeholder={"Type your password here"}
+              />
+              {errors.password && touched.password && (
+                <p
+                  style={{
+                    fontSize: 14,
+                    marginBottom: "10px",
+                    color: colors.red,
+                  }}
+                >
+                  {errors.password}
+                </p>
+              )}
+            </div>
+            <UsableButton
+              color={colors.yellow}
+              title={"Login"}
+              onPress={handleSubmit}
+            />
+          </>
         )}
-        <p>Password</p>
-        <CommonInput
-          type={"password"}
-          value={password}
-          onChange={(e) => {
-            setPassword(e.target.value);
-            if (e.target.value) {
-              setPasswordError(false);
-            } else {
-              setPasswordError(true);
-            }
-          }}
-          placeholder={"Type your password here"}
-        />
-        {passwordError && (
-          <ErrorMessage title={"Please enter password."} color={colors.red} />
-        )}
-      </div>
-      <UsableButton color={colors.yellow} title={"Login"} onPress={onPress} />
-      {error && <Error color={colors.red} title={"Enter correct details"} />}
+      </Formik>
     </div>
   );
 }

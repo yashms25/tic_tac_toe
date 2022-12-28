@@ -2,11 +2,8 @@ import {
   getFirestore,
   collection,
   getDocs,
-  setDoc,
-  doc,
   query,
   where,
-  orderBy,
 } from "firebase/firestore";
 const getusername = async (email) => {
   let name = "";

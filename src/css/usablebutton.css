@@ -1,17 +1,17 @@
-.button-container {
+.button-con {
   background-color: red;
   width: 100%;
   height: 3rem;
   display: flex;
-  justify-content: center;
-  align-items: center;
   cursor: pointer;
   margin-top: 1rem;
   margin-bottom: 1.5rem;
   border-radius: 10px;
 }
 
-.button-text {
+.button-title {
   font-weight: bold;
   color: white;
+  text-align: center;
+  margin: auto;
 }

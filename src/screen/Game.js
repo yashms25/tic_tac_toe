@@ -193,8 +193,11 @@ function Game() {
       </h1>
       <p>Your piece</p>
       <FaTimes color={colors.blue} size={50} style={{ margin: "1rem" }} />
-      <div style={{ backgroundColor: colors.cream }} className="name-section">
-        <p>{gametitle}</p>
+      <div
+        style={{ backgroundColor: colors.cream, display: "flex" }}
+        className="name-section"
+      >
+        <p style={{ margin: "auto" }}>{gametitle}</p>
       </div>
       <table className="table-section">
         <tr>

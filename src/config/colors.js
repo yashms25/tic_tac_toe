@@ -5,6 +5,7 @@ const colors = {
   green: "#6FCF97",
   red: "#EB5757",
   cream: "#FFE79E",
+  purple: "#270F36",
 };
 
 export default colors;

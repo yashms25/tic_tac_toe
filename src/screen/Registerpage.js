@@ -1,150 +1,260 @@
 import React, { useState } from "react";
 import CommonInput from "../components/CommonInput";
-import Error from "../components/Error";
-import ErrorMessage from "../components/ErrorMessage";
+
 import UsableButton from "../components/UsableButton";
 import colors from "../config/colors";
 import "../css/registerpage.css";
-import { getFirestore, collection, setDoc, doc } from "firebase/firestore";
+import {
+  getFirestore,
+  collection,
+  setDoc,
+  doc,
+  getDocs,
+  query,
+  where,
+} from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import BackIcon from "../components/BackIcon";
+import { Formik } from "formik";
+import * as Yup from "yup";
+
+import { email, name, password, username } from "../config/ValidationSchema";
 
 function Registerpage() {
   const navigate = useNavigate();
-  const [name, setName] = useState("");
-  const [userName, setUserName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [success, setSuccess] = useState(false);
-  const [nameError, setNameError] = useState(false);
-  const [usernameError, setUserNameError] = useState(false);
-  const [passwordError, setPasswordError] = useState(false);
-  const [emailError, setEmailError] = useState(false);
-  const checkEmail = (email) => {
-    let validRegex =
-      /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
-    if (email.match(validRegex)) {
-      setEmailError(false);
+  const [error, setError] = useState("");
+
+  const validation = Yup.object().shape({
+    name: name,
+    password: password,
+    username: username,
+    email: email,
+  });
+
+  const onPress = async (values) => {
+    const firestore = getFirestore();
+    const auth = getAuth();
+    const q1 = query(
+      collection(getFirestore(), "users"),
+      where("email", "==", values.email)
+    );
+    const q2 = query(
+      collection(getFirestore(), "users"),
+      where("username", "==", values.username)
+    );
+    const querySnapshot1 = await getDocs(q1);
+    const querySnapshot2 = await getDocs(q2);
+    if (querySnapshot1.size !== 0 || querySnapshot2.size !== 0) {
+      if (querySnapshot1.size !== 0 && querySnapshot2.size !== 0) {
+        setError("both");
+      } else if (querySnapshot1.size !== 0) {
+        setError("email");
+      } else if (querySnapshot2.size !== 0) {
+        setError("username");
+      }
     } else {
-      setEmailError(true);
-    }
-  };
-  const onPress = async () => {
-    if (name === "") {
-      setNameError(true);
-    }
-    if (userName === "") {
-      setUserNameError(true);
-    }
-    if (email === "") {
-      setEmailError(true);
-    }
-    if (password === "") {
-      setPasswordError(true);
-    }
-    if (!nameError && !usernameError && !passwordError && !emailError) {
-      const firestore = getFirestore();
-      const auth = getAuth();
-      await createUserWithEmailAndPassword(auth, email, password);
-      await setDoc(doc(collection(firestore, "users"), userName), {
-        username: userName,
-        email: email,
-        name: name,
+      setError("success");
+      await createUserWithEmailAndPassword(auth, values.email, values.password);
+      await setDoc(doc(collection(firestore, "users"), values.username), {
+        username: values.username,
+        email: values.email,
+        name: values.name,
       });
-      setSuccess(true);
-      navigate("/gamepage");
+      navigate("/gamepage", { replace: true });
     }
   };
   return (
     <div className="register-section">
+      {error === "email" && (
+        <div
+          className="alert alert-danger alert-dismissible fade show"
+          role="alert"
+        >
+          <strong>Error!</strong> This email is already taken!
+          <button
+            type="button"
+            className="btn-close"
+            data-bs-dismiss="alert"
+            aria-label="Close"
+            onClick={() => {
+              setError("");
+            }}
+          ></button>
+        </div>
+      )}
+      {error === "username" && (
+        <div
+          className="alert alert-danger alert-dismissible fade show"
+          role="alert"
+        >
+          <strong>Error!</strong> This username is already taken!
+          <button
+            type="button"
+            className="btn-close"
+            data-bs-dismiss="alert"
+            aria-label="Close"
+            onClick={() => {
+              setError("");
+            }}
+          ></button>
+        </div>
+      )}
+      {error === "both" && (
+        <div
+          className="alert alert-danger alert-dismissible fade show"
+          role="alert"
+        >
+          <strong>Error!</strong> This email and username are already taken!
+          <button
+            type="button"
+            className="btn-close"
+            data-bs-dismiss="alert"
+            aria-label="Close"
+            onClick={() => {
+              setError("");
+            }}
+          ></button>
+        </div>
+      )}
+      {error === "success" && (
+        <div
+          className="alert alert-success alert-dismissible fade show"
+          role="alert"
+        >
+          <strong>Succeess!</strong> Account created successfully!
+          <button
+            type="button"
+            className="btn-close"
+            data-bs-dismiss="alert"
+            aria-label="Close"
+            onClick={() => {
+              setError("");
+            }}
+          ></button>
+        </div>
+      )}
       <BackIcon />
       <h4>Create account</h4>
       <h1>Let's get to know you better!</h1>
-      <div className="input-section">
-        <p>Your name</p>
-        <CommonInput
-          type={"text"}
-          value={name}
-          onChange={(e) => {
-            setName(e.target.value);
-            if (e.target.value) {
-              setNameError(false);
-            } else {
-              setNameError(true);
-            }
-          }}
-          placeholder={"Type your name here"}
-        />
-        {nameError && (
-          <ErrorMessage title={"Please enter your name"} color={colors.red} />
+      <Formik
+        initialValues={{ email: "", name: "", username: "", password: "" }}
+        validationSchema={validation}
+        onSubmit={(values) => {
+          onPress(values);
+        }}
+      >
+        {({ errors, touched, handleChange, handleSubmit, values }) => (
+          <>
+            <div className="input-section">
+              <p>Your name</p>
+              <CommonInput
+                styles={{
+                  border:
+                    errors.name && touched.name
+                      ? `1px solid ${colors.red}`
+                      : `1px solid ${colors.green}`,
+                }}
+                type={"text"}
+                value={values.name}
+                onChange={handleChange("name")}
+                placeholder={"Type your name here"}
+              />
+              {errors.name && touched.name && (
+                <p
+                  style={{
+                    fontSize: 14,
+                    marginBottom: "10px",
+                    color: colors.red,
+                  }}
+                >
+                  {errors.name}
+                </p>
+              )}
+              <p>Username</p>
+              <CommonInput
+                styles={{
+                  border:
+                    errors.username && touched.username
+                      ? `1px solid ${colors.red}`
+                      : `1px solid ${colors.green}`,
+                }}
+                type={"text"}
+                value={values.username}
+                onChange={handleChange("username")}
+                placeholder={"Type your username here"}
+              />
+              {errors.username && touched.username && (
+                <p
+                  style={{
+                    fontSize: 14,
+                    marginBottom: "10px",
+                    color: colors.red,
+                  }}
+                >
+                  {errors.username}
+                </p>
+              )}
+
+              <p>Email</p>
+              <CommonInput
+                styles={{
+                  border:
+                    errors.email && touched.email
+                      ? `1px solid ${colors.red}`
+                      : `1px solid ${colors.green}`,
+                }}
+                type={"email"}
+                value={values.email}
+                onChange={handleChange("email")}
+                placeholder={"Type your email here"}
+              />
+              {errors.email && touched.email && (
+                <p
+                  style={{
+                    fontSize: 14,
+                    marginBottom: "10px",
+                    color: colors.red,
+                  }}
+                >
+                  {errors.email}
+                </p>
+              )}
+
+              <p>Password</p>
+              <CommonInput
+                styles={{
+                  border:
+                    errors.password && touched.password
+                      ? `1px solid ${colors.red}`
+                      : `1px solid ${colors.green}`,
+                }}
+                type={"password"}
+                value={values.password}
+                onChange={handleChange("password")}
+                placeholder={"Type your password here"}
+              />
+              {errors.password && touched.password && (
+                <p
+                  style={{
+                    fontSize: 14,
+                    marginBottom: "10px",
+                    color: colors.red,
+                  }}
+                >
+                  {errors.password}
+                </p>
+              )}
+            </div>
+            <UsableButton
+              color={colors.yellow}
+              title={"Register"}
+              onPress={handleSubmit}
+            />
+          </>
         )}
-        <p>Username</p>
-        <CommonInput
-          type={"text"}
-          value={userName}
-          onChange={(e) => {
-            setUserName(e.target.value);
-            if (e.target.value) {
-              setUserNameError(false);
-            } else {
-              setUserNameError(true);
-            }
-          }}
-          placeholder={"Type your username here"}
-        />
-        {usernameError && (
-          <ErrorMessage
-            title={"Please enter your username"}
-            color={colors.red}
-          />
-        )}
-        <p>Email</p>
-        <CommonInput
-          type={"email"}
-          value={email}
-          onChange={(e) => {
-            setEmail(e.target.value);
-            checkEmail(e.target.value);
-          }}
-          placeholder={"Type your email here"}
-        />
-        {emailError && (
-          <ErrorMessage title={"Please enter valid email"} color={colors.red} />
-        )}
-        <p>Password</p>
-        <CommonInput
-          type={"password"}
-          value={password}
-          onChange={(e) => {
-            setPassword(e.target.value);
-            if (e.target.value.length < 8) {
-              setPasswordError(true);
-            } else {
-              setPasswordError(false);
-            }
-          }}
-          placeholder={"Type your password here"}
-        />
-        {passwordError && (
-          <ErrorMessage
-            title={"Password must be 8 characters."}
-            color={colors.red}
-          />
-        )}
-      </div>
-      <UsableButton
-        color={colors.yellow}
-        title={"Register"}
-        onPress={onPress}
-      />
-      {success && (
-        <Error
-          color={colors.green}
-          title={"Congratulations!! Account created"}
-        />
-      )}
+      </Formik>
     </div>
   );
 }
